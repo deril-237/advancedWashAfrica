@@ -1,0 +1,135 @@
+@import url("https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Syne:wght@400;500;600;700&family=Lora:ital@0;1&display=swap");
+@import "tailwindcss";
+
+@theme {
+  --font-heading: "Playfair Display", Georgia, serif;
+  --font-sans: "Syne", sans-serif;
+  --font-serif: "Lora", Georgia, serif;
+}
+
+@plugin "daisyui" {
+  themes: light --default;
+}
+
+@plugin "daisyui/theme" {
+  name: "light";
+  default: true;
+
+  /* ------------------------------------------------------------------
+   * Brand Colors (Material primary)
+   * ------------------------------------------------------------------ */
+
+  --color-primary: #013066;
+  /* primary */
+  --color-primary-content: #ffffff;
+  /* on-primary */
+
+  --color-secondary: #F59B0F;
+  /* secondary-container (more vivid than raw secondary, for better CTA contrast) */
+  --color-secondary-content: #6c5000;
+  /* on-secondary-container */
+
+  --color-accent: #2d7a4a;
+  /* brand accent kept as-is (green) */
+  --color-accent-content: #ffffff;
+
+  /* ------------------------------------------------------------------
+   * Semantic Status Colors
+   * ------------------------------------------------------------------ */
+
+  --color-success: #2d7a4a;
+  --color-warning: #785900;
+  /* secondary (Material's gold/brown tone) */
+  --color-info: #2563eb;
+  /* reused primary, keeps brand consistency */
+  --color-error: #ba1a1a;
+  /* Material error */
+
+  /* ------------------------------------------------------------------
+   * Surface & Background System
+   * ------------------------------------------------------------------ */
+
+  --color-base-100: #ffffff;
+  /* surface-container-lowest */
+  --color-base-200: #f6f3f2;
+  /* surface-container-low */
+  --color-base-300: #f0eded;
+  /* surface-container */
+  --color-base-content: #1b1c1c;
+  /* on-surface */
+
+  /* ------------------------------------------------------------------
+   * Neutral & Utility Colors
+   * ------------------------------------------------------------------ */
+
+  --color-neutral: #2c2e2e;
+  /* tertiary */
+  --color-neutral-content: #ffffff;
+  /* on-tertiary */
+
+  --color-border: #bfc9c4;
+  /* outline-variant */
+}
+
+@layer components {
+  /* body {
+    @apply bg-base-100 text-base-content font-serif;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    @apply font-heading;
+  }
+
+  .btn,
+  .nav,
+  .label {
+    @apply font-sans;
+  } */
+}
+
+
+@keyframes partners-scroll {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+.animate-partners {
+  animation: partners-scroll 28s linear infinite;
+  will-change: transform;
+}
+
+.animate-partners:hover,
+.partners-viewport:focus-within .animate-partners {
+  animation-play-state: paused;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .partners-viewport {
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+  }
+
+  .animate-partners {
+    animation: none;
+    will-change: auto;
+  }
+}
+
+.fade-in {
+  opacity: 0;
+  transition: opacity 1s ease-in-out;
+}
+
+.fade-out {
+  opacity: 1;
+  transition: opacity 2s ease-in-out;
+}

@@ -1,0 +1,311 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Get a free hosted Postgres database in seconds: `npx create-db`
+
+generator client {
+  provider = "prisma-client"
+  output   = "../lib/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum WaveStatus {
+  PENDING
+  FINISHED
+  OPEN
+}
+
+enum InscriptionStatus {
+  // DRAFT
+  // EMAIL_PENDING
+  SUBMITTED
+  ACCEPTED
+  REJECTED
+}
+
+enum ModalityOption {
+  ON_LINE
+  OFF_LINE
+}
+
+enum StorageProvider {
+  CLOUDINARY
+}
+
+model Program {
+  id               String            @id @default(cuid())
+  duration         Int               @unique
+  trainingPrograms TrainingProgram[]
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("programs")
+}
+
+model Training {
+  id          String   @id @default(cuid())
+  name        String   @unique
+  description String
+  objective   String
+  imageId     String?
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  image            FileAsset?        @relation(name: "trainingImage", fields: [imageId], references: [id])
+  trainingPrograms TrainingProgram[]
+
+  @@map("trainings")
+}
+
+model TrainingProgram {
+  id         String @id @default(cuid())
+  trainingId String @map("training_id")
+  programId  String @map("program_id")
+  price      Int
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  program  Program  @relation(fields: [programId], references: [id])
+  training Training @relation(fields: [trainingId], references: [id])
+
+  waves               Wave[]
+  modules             Module[]
+  preRequests         PreRequest[]
+  careerOpportunities CareerOpportunity[]
+
+  @@unique([trainingId, programId])
+  @@map("training_program")
+}
+
+model Module {
+  id                String @id @default(cuid())
+  name              String
+  position          Int
+  description       String
+  trainingProgramId String @map("training_program_id")
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  trainingProgram TrainingProgram @relation(fields: [trainingProgramId], references: [id])
+
+  @@unique([trainingProgramId, position])
+  @@map("modules")
+}
+
+model PreRequest {
+  id                String   @id @default(cuid())
+  label             String
+  order             Int
+  trainingProgramId String   @map("training_program_id")
+  createdAt         DateTime @default(now()) @map("created_at")
+  updatedAt         DateTime @updatedAt @map("updated_at")
+
+  trainingProgram TrainingProgram @relation(fields: [trainingProgramId], references: [id])
+
+  @@unique([trainingProgramId, order])
+  @@map("pre_requests")
+}
+
+model CareerOpportunity {
+  id                String          @id @default(cuid())
+  label             String
+  trainingProgramId String          @map("training_program_id")
+  trainingProgram   TrainingProgram @relation(fields: [trainingProgramId], references: [id])
+  createdAt         DateTime        @default(now()) @map("created_at")
+  updatedAt         DateTime        @updatedAt @map("updated_at")
+
+  @@unique([trainingProgramId, label])
+  @@map("carrer_opportunities")
+}
+
+model Wave {
+  id                String     @id @default(cuid())
+  startDate         DateTime   @map("start_date") @db.Date // unique formationProgram
+  quota             Int
+  status            WaveStatus
+  price             Int
+  //  price             Decimal    @db.Decimal(10, 2)
+  // numberWave Int @map("number_wave")
+  trainingProgramId String     @map("training_program_id")
+
+  inscriptions    Inscription[]
+  trainingProgram TrainingProgram @relation(fields: [trainingProgramId], references: [id])
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("waves")
+}
+
+model Student {
+  id                String              @id @default(cuid())
+  numCNIPassport    String              @unique @map("num_cni_passport")
+  name              String
+  secondName        String              @map("second_name")
+  birthDate         DateTime            @map("birth_date") @db.Date
+  birthPlace        String              @map("birth_place")
+  residence         String
+  email             String              @unique
+  phone             String              @unique
+  diplomaFileId     String              @map("diploma_file_id")
+  cniPassportFileId String              @map("cni_passort_file_id")
+  photoFileId       String              @map("photo_file_id")
+  motivations       StudentMotivation[]
+  inscriptions      Inscription[]
+  diplomaFile       FileAsset           @relation(name: "diplomaFile", fields: [diplomaFileId], references: [id])
+  photoFile         FileAsset           @relation(name: "photoFile", fields: [photoFileId], references: [id])
+  cniPassportFile   FileAsset           @relation(name: "cniPassportFile", fields: [cniPassportFileId], references: [id])
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("students")
+}
+
+model OptionMotivation {
+  id    String @id @default(cuid())
+  label String
+  order Int    @unique
+
+  createdAt DateTime            @default(now()) @map("created_at")
+  updatedAt DateTime            @updatedAt @map("updated_at")
+  student   StudentMotivation[]
+
+  @@map("option_motivations")
+}
+
+model StudentMotivation {
+  id           String  @id @default(cuid())
+  studentId    String
+  optionId     String?
+  textResponse String?
+
+  student Student           @relation(fields: [studentId], references: [id])
+  option  OptionMotivation? @relation(fields: [optionId], references: [id])
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@unique([studentId, optionId])
+  @@map("student_motivations")
+}
+
+model Inscription {
+  id             String            @id @default(cuid())
+  studentId      String
+  waveId         String
+  status         InscriptionStatus
+  modality       ModalityOption
+  reasonRejected String?
+
+  student Student @relation(fields: [studentId], references: [id])
+  wave    Wave    @relation(fields: [waveId], references: [id])
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@unique([studentId, waveId])
+  @@map("inscriptions")
+}
+
+model FileAsset {
+  id           String          @id @default(cuid())
+  provider     StorageProvider
+  key          String          @unique
+  // url          String
+  originalName String
+  mimeType     String
+  size         Int
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  studentsDiploma    Student[]  @relation(name: "diplomaFile")
+  studentsPhoto      Student[]  @relation(name: "photoFile")
+  studentsCniPassort Student[]  @relation(name: "cniPassportFile")
+  trainings          Training[] @relation(name: "trainingImage")
+
+  @@unique([key, provider])
+  @@map("file_assests")
+}
+
+model User {
+  id            String    @id
+  name          String
+  email         String
+  emailVerified Boolean   @default(false)
+  image         String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  sessions      Session[]
+  accounts      Account[]
+
+  @@unique([email])
+  @@map("user")
+}
+
+model Session {
+  id        String   @id
+  expiresAt DateTime
+  token     String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  ipAddress String?
+  userAgent String?
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([token])
+  @@index([userId])
+  @@map("session")
+}
+
+model Account {
+  id                    String    @id
+  accountId             String
+  providerId            String
+  userId                String
+  user                  User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  accessToken           String?
+  refreshToken          String?
+  idToken               String?
+  accessTokenExpiresAt  DateTime?
+  refreshTokenExpiresAt DateTime?
+  scope                 String?
+  password              String?
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
+
+  @@index([userId])
+  @@map("account")
+}
+
+model Verification {
+  id         String   @id
+  identifier String
+  value      String
+  expiresAt  DateTime
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@index([identifier])
+  @@map("verification")
+}
+
+model OtpCode {
+  id        String   @id @default(cuid())
+  codeHash  String
+  email     String
+  used      Boolean  @default(false)
+  expiredAt DateTime
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("opt_codes")
+}
